@@ -50,6 +50,27 @@ def main(page: ft.Page):
             snack.content.value = "You were not registered" # type: ignore
             snack.open = True
             page.update()
+
+    def req_login(e, username, password):
+        data = {
+            "username": username,
+            "password": password,
+        }
+        response = requests.post("http://127.0.0.1:8000/login", json=data)
+
+        if response.status_code == 200:
+            snack.content.value = "Successfully logged in" # type: ignore
+            snack.open = True
+            page.update()
+            page.go("/home")
+        if response.status_code == 404:
+            snack.content.value = "Invalid username" # type: ignore
+            snack.open = True
+            page.update()
+        if response.status_code == 401:
+            snack.content.value = "Invalid password" # type: ignore
+            snack.open = True
+            page.update()
     
     def route_change(route):
         username = TextField(
@@ -78,7 +99,7 @@ def main(page: ft.Page):
                     password,
                     ft.Row([
                         ft.ElevatedButton("Register", on_click=lambda e: req_register(e, username.value, password.value)),
-                        ft.FilledButton("Already registered?", on_click=lambda _: page.go("/login"))
+                        ft.FilledButton("Already registered?", on_click=lambda e: page.go("/login"))
                     ]),
                     
                     snack,
@@ -93,21 +114,32 @@ def main(page: ft.Page):
                         ft.AppBar(title=ft.Text("Login Here"), bgcolor=ft.colors.SURFACE_VARIANT),
                         username,
                         password,
-                        ft.FilledButton("Login", on_click=lambda _: page.go("/home"))
-                        # ft.ElevatedButton("Go Home", on_click=lambda _: page.go("/")),
+                        ft.FilledButton("Login", on_click=lambda e: req_login(e, username.value, password.value)),
+                        ft.ElevatedButton("Go Home", on_click=lambda _: page.go("/home")),
                     ],
                 )
             )
+
+            if page.route == "/home":
+                page.views.append(
+                    ft.View(
+                    "/home",
+                    [
+                        ft.AppBar(title=ft.Text("Home Page"), bgcolor=ft.colors.BLUE_ACCENT),
+                        # ft.Text(f"Welcome home, {username.value}!")
+                    ]
+                    )
+                )
         page.update()
 
 
-    def view_pop(view):
-        page.views.pop()
-        top_view = page.views[-1]
-        page.go(top_view.route)
+    # def view_pop(view):
+    #     page.views.pop()
+    #     top_view = page.views[1]
+    #     page.go(top_view.route)
 
     page.on_route_change = route_change
-    page.on_view_pop = view_pop
+    # page.on_view_pop = view_pop
     page.go(page.route)
 
 ft.app(target=main, view=ft.WEB_BROWSER)
