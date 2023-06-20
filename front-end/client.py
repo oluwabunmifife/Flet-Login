@@ -25,7 +25,7 @@ from flet import (
 import requests
 
 def main(page: ft.Page):
-    page.title = "Routes Example"
+    page.title = "Fife's app"
     page.add(Text("Welcome"))
     snack = SnackBar(
         Text("Registration successful")
@@ -59,10 +59,17 @@ def main(page: ft.Page):
         response = requests.post("http://127.0.0.1:8000/login", json=data)
 
         if response.status_code == 200:
-            snack.content.value = "Successfully logged in" # type: ignore
-            snack.open = True
+
+            page.views.append(
+                ft.View(
+                "/home",
+                [
+                    ft.AppBar(title=ft.Text("Home Page"), bgcolor=ft.colors.AMBER_ACCENT_700),
+                    ft.Text(f"Welcome, {username}!!"),
+                ]
+                )
+            )
             page.update()
-            page.go("/home")
         if response.status_code == 404:
             snack.content.value = "Invalid username" # type: ignore
             snack.open = True
@@ -115,31 +122,21 @@ def main(page: ft.Page):
                         username,
                         password,
                         ft.FilledButton("Login", on_click=lambda e: req_login(e, username.value, password.value)),
-                        ft.ElevatedButton("Go Home", on_click=lambda _: page.go("/home")),
+                        # ft.ElevatedButton("Go Home", on_click=lambda _: page.go("/home")),
                     ],
                 )
             )
 
-            if page.route == "/home":
-                page.views.append(
-                    ft.View(
-                    "/home",
-                    [
-                        ft.AppBar(title=ft.Text("Home Page"), bgcolor=ft.colors.BLUE_ACCENT),
-                        # ft.Text(f"Welcome home, {username.value}!")
-                    ]
-                    )
-                )
         page.update()
 
 
-    # def view_pop(view):
-    #     page.views.pop()
-    #     top_view = page.views[1]
-    #     page.go(top_view.route)
+    def view_pop(view):
+        page.views.pop()
+        top_view = page.views[-1]
+        page.go(top_view.route)
 
     page.on_route_change = route_change
-    # page.on_view_pop = view_pop
+    page.on_view_pop = view_pop
     page.go(page.route)
 
 ft.app(target=main, view=ft.WEB_BROWSER)
